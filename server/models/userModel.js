@@ -13,6 +13,10 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    profilePhoto: {
+      type: String,
+      default: "default-profile-photo.png",
+    },
     password: {
       type: String,
       required: true,
