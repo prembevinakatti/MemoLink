@@ -94,3 +94,31 @@ module.exports.likeMemory = async (req, res) => {
     console.log("Error loking memory in server : ", error.message);
   }
 };
+
+module.exports.getMemoriesByUser = async (req, res) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized Access" });
+    }
+
+    const memories = await memoriesModel
+      .find({ user: user })
+      .sort({ createdAt: -1 });
+
+    if (!memories) {
+      return res
+        .status(404)
+        .json({ message: "No memories found for this user" });
+    }
+
+    return res.status(200).json({
+      message: "User memories retrieved successfully ",
+      success: true,
+      memories,
+    });
+  } catch (error) {
+    console.log("Error Getting User memories : ", error.message);
+  }
+};
