@@ -69,3 +69,53 @@ module.exports.loginAccount = async (req, res) => {
     console.log("Error while loginAccount in server: " + error.message);
   }
 };
+
+module.exports.logout = async (req, res) => {
+  try {
+    res.clearCookie("token");
+    return res
+      .status(200)
+      .json({ message: "Logged out successfully", success: true });
+  } catch (error) {
+    console.log("Error while logging out in server: ", error.message);
+  }
+};
+
+module.exports.updateAccount = async (req, res) => {
+  try {
+    const { profilePhoto, username, email } = req.body;
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const updateData = {};
+
+    if (profilePhoto) updateData.profilePhoto = profilePhoto;
+    if (username) updateData.username = username;
+    if (email) updateData.email = email;
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ message: "No data to update" });
+    }
+
+    const updateUser = await userModel.findByIdAndUpdate(user, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updateUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({
+      message: "Account updated successfully",
+      success: true,
+      user: updateUser,
+    });
+  } catch (error) {
+    console.log("Error while updating account: ", error.message);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
