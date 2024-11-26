@@ -1,4 +1,5 @@
 const memoriesModel = require("../models/memoriesModel");
+const memoryExchangeModel = require("../models/memoryExchangeModel");
 const { findById } = require("../models/userModel");
 
 module.exports.createMemory = async (req, res) => {
@@ -120,5 +121,51 @@ module.exports.getMemoriesByUser = async (req, res) => {
     });
   } catch (error) {
     console.log("Error Getting User memories : ", error.message);
+  }
+};
+
+module.exports.sendMemory = async (req, res) => {
+  try {
+    const user = req.user;
+    const { recipientId, memoryId } = req.body;
+
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized Access" });
+    }
+
+    if (!recipientId || !memoryId) {
+      return res
+        .status(400)
+        .json({ message: "Recipient ID and Memory ID are required" });
+    }
+
+    let conversation = await memoryExchangeModel
+      .findOne({
+        $or: [
+          { sender: user, receiver: recipientId },
+          { sender: recipientId, receiver: user },
+        ],
+      })
+      .populate("memories");
+
+    if (!conversation) {
+      conversation = await memoryExchangeModel.create({
+        sender: user,
+        receiver: recipientId,
+      });
+    }
+
+    conversation.memories.push(memoryId);
+    await conversation.save();
+
+    return res
+      .status(200)
+      .json({
+        message: "Memory sent successfully ",
+        success: true,
+        conversation,
+      });
+  } catch (error) {
+    console.log("Error Sending Memory : ", error.message);
   }
 };
