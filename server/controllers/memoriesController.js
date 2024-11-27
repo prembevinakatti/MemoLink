@@ -4,9 +4,9 @@ const { findById } = require("../models/userModel");
 
 module.exports.createMemory = async (req, res) => {
   try {
-    const { user, profilePhoto, location, content } = req.body;
+    const { user, profilePhoto, location, content, tags } = req.body;
 
-    if (!user || !profilePhoto || !location || !content) {
+    if (!user || !profilePhoto || !location || !content || !tags) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -14,6 +14,7 @@ module.exports.createMemory = async (req, res) => {
       user: user,
       profilePhoto: profilePhoto,
       location: location,
+      tags: tags,
       content: content,
     });
 
@@ -207,5 +208,32 @@ module.exports.getMemories = async (req, res) => {
       message: "An error occurred while retrieving memories",
       success: false,
     });
+  }
+};
+
+module.exports.getAllMemories = async (req, res) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized Access" });
+    }
+
+    const memories = await memoriesModel.find().sort({ createdAt: -1 });
+
+    if (!memories) {
+      return res.status(404).json({ message: "No memories found" });
+    }
+
+    return res.status(200).json({
+      message: "All memories retrieved successfully",
+      success: true,
+      memories,
+    });
+  } catch (error) {
+    console.log(
+      "An error occurred while retrieving all memories: ",
+      error.message
+    );
   }
 };
