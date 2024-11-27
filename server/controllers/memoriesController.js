@@ -158,14 +158,54 @@ module.exports.sendMemory = async (req, res) => {
     conversation.memories.push(memoryId);
     await conversation.save();
 
-    return res
-      .status(200)
-      .json({
-        message: "Memory sent successfully ",
-        success: true,
-        conversation,
-      });
+    return res.status(200).json({
+      message: "Memory sent successfully ",
+      success: true,
+      conversation,
+    });
   } catch (error) {
     console.log("Error Sending Memory : ", error.message);
+  }
+};
+
+module.exports.getMemories = async (req, res) => {
+  try {
+    const user = req.user;
+    const senderId = req.params.senderId;
+
+    console.log("user", user, "senderId", senderId);
+
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized Access" });
+    }
+
+    if (!senderId) {
+      return res.status(400).json({ message: "Sender ID is required" });
+    }
+
+    const conversation = await memoryExchangeModel
+      .findOne({
+        $or: [
+          { sender: senderId, receiver: user },
+          { sender: user, receiver: senderId },
+        ],
+      })
+      .populate("memories");
+
+    if (!conversation) {
+      return res.status(404).json({ message: "Conversation not found" });
+    }
+
+    return res.status(200).json({
+      message: "Memories retrieved successfully",
+      success: true,
+      conversation,
+    });
+  } catch (error) {
+    console.error("Error retrieving memories: ", error.message);
+    return res.status(500).json({
+      message: "An error occurred while retrieving memories",
+      success: false,
+    });
   }
 };
