@@ -119,3 +119,25 @@ module.exports.updateAccount = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+
+
+module.exports.checkUsername = async (req, res) => {
+  try {
+    const { username } = req.body;
+
+    if (!username) {
+      return res.status(400).json({ success: false, message: "Username is required" });
+    }
+
+    const existingUser = await userModel.findOne({ username });
+
+    if (existingUser) {
+      return res.status(409).json({ success: false, message: "Username is already taken" });
+    }
+
+    return res.status(200).json({ success: true, message: "Username is available" });
+  } catch (error) {
+    console.error("Error checking username:", error.message);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
