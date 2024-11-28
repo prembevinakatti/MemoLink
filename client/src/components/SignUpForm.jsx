@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 export default function SignUpForm() {
   const [formData, setFormData] = useState({
@@ -12,6 +14,8 @@ export default function SignUpForm() {
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [usernameMessage, setUsernameMessage] = useState("");
   const [isUsernameAvailable, setIsUsernameAvailable] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const navigate = useNavigate();
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -23,12 +27,27 @@ export default function SignUpForm() {
     }
   };
 
-  const handlePhotoChange = (event) => {
+  const handlePhotoChange = async (event) => {
     const file = event.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => setProfilePhoto(reader.result);
-      reader.readAsDataURL(file);
+      setIsUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("cloud_name", "dyp7pxrli");
+        formData.append("upload_preset", "MemoLink"); // Replace with your Cloudinary upload preset
+
+        const response = await axios.post(
+          "https://api.cloudinary.com/v1_1/dyp7pxrli/image/upload", // Replace 'your_cloud_name'
+          formData
+        );
+
+        setProfilePhoto(response.data.secure_url); // URL of the uploaded image
+        setIsUploading(false);
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        setIsUploading(false);
+      }
     }
   };
 
@@ -40,7 +59,10 @@ export default function SignUpForm() {
         return;
       }
 
-      const response = await axios.post("http://localhost:3000/api/MemoLink/auth/checkUsername", { username });
+      const response = await axios.post(
+        "http://localhost:3000/api/MemoLink/auth/checkUsername",
+        { username }
+      );
       setUsernameMessage(response.data.message);
       setIsUsernameAvailable(response.data.success);
     } catch (error) {
@@ -51,7 +73,7 @@ export default function SignUpForm() {
     }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!isUsernameAvailable) {
@@ -59,7 +81,26 @@ export default function SignUpForm() {
       return;
     }
 
-    console.log("Form Submitted: ", { ...formData, profilePhoto });
+    try {
+      const res = await axios.post(
+        `http://localhost:3000/api/MemoLink/auth/createAccount`,
+        { ...formData, profilePhoto },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+
+      if (res.data.success) {
+        toast.success(res.data.message);
+        navigate("/");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "An error occurred");
+      console.log("Error Creating Account in client : ", error);
+    }
   };
 
   return (
@@ -72,7 +113,11 @@ export default function SignUpForm() {
         {/* Profile Photo Upload */}
         <div className="flex flex-col items-center space-y-4">
           <div className="relative w-24 h-24">
-            {profilePhoto ? (
+            {isUploading ? (
+              <div className="w-full h-full rounded-full bg-gray-700 flex items-center justify-center text-gray-400">
+                Uploading...
+              </div>
+            ) : profilePhoto ? (
               <img
                 src={profilePhoto}
                 alt="Profile Preview"
@@ -96,7 +141,7 @@ export default function SignUpForm() {
               htmlFor="profile-photo"
               className="cursor-pointer bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 px-4 rounded-lg shadow-lg"
             >
-              Choose Photo
+              {isUploading ? "Uploading..." : "Choose Photo"}
             </label>
           </div>
         </div>
@@ -165,7 +210,10 @@ export default function SignUpForm() {
 
           {/* Confirm Password */}
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium">
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium"
+            >
               Confirm Password
             </label>
             <input
@@ -185,6 +233,15 @@ export default function SignUpForm() {
           >
             Sign Up
           </button>
+
+          <div className="w-full text-center font-semibold">
+            <span>
+              Already have an account ?{" "}
+              <Link to="/" className="text-blue-500 underline">
+                Login
+              </Link>
+            </span>
+          </div>
         </form>
       </div>
     </div>
