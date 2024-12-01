@@ -2,6 +2,11 @@ import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import SignUpForm from "./components/SignUpForm";
 import LoginForm from "./components/LoginForm";
 import Layout from "./components/Layout";
+import HomePage from "./components/HomePage";
+import SearchUser from "./components/SearchUser";
+import CreateMemory from "./components/CreateMemory";
+import Dashboard from "./components/Dashboard";
+import Notifications from "./components/Notifications";
 
 function App() {
   const router = createBrowserRouter([
@@ -19,23 +24,23 @@ function App() {
       children: [
         {
           path: "/home",
-          element: <div>Welcome to Home</div>,
+          element: <HomePage />,
         },
         {
           path: "/home/search",
-          element: <div>Search Page</div>, // Replace with actual component
+          element: <SearchUser />, // Replace with actual component
         },
         {
           path: "/home/create",
-          element: <div>Create Page</div>, // Replace with actual component
+          element: <CreateMemory />, // Replace with actual component
         },
         {
           path: "/home/dashboard",
-          element: <div>Dashboard Page</div>, // Replace with actual component
+          element: <Dashboard />, // Replace with actual component
         },
         {
           path: "/home/notifications",
-          element: <div>Notifications Page</div>, // Replace with actual component
+          element: <Notifications />, // Replace with actual component
         },
       ],
     },
