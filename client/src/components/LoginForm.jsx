@@ -1,6 +1,8 @@
+import { setAuthUser } from "@/redux/userSlice";
 import axios from "axios";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
+import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function LoginForm() {
@@ -9,6 +11,7 @@ export default function LoginForm() {
     password: "",
   });
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleInputChange = (event) => {
     const { name, value, type, checked } = event.target;
@@ -35,6 +38,7 @@ export default function LoginForm() {
 
       if (res.data.success) {
         toast.success(res.data.message);
+        dispatch(setAuthUser(res.data.user));
         navigate("/home");
       }
     } catch (error) {

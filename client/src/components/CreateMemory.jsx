@@ -9,22 +9,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import useGetAllUsers from "@/hooks/useGetAllUsers";
+import axios from "axios";
+import { useSelector } from "react-redux";
 
 const CreateMemory = () => {
   const [memory, setMemory] = useState({
     location: "",
     content: "",
-    tags: [], // Tags will be an array
+    tags: [], // Tags will store user IDs
   });
   const [selectedTag, setSelectedTag] = useState(""); // For selected user tag
-
-  // Dummy list of usernames, in a real app, you would fetch this from the API
-  const users = [
-    { id: 1, username: "john_doe" },
-    { id: 2, username: "jane_smith" },
-    { id: 3, username: "mike_brown" },
-    { id: 4, username: "alice_jones" },
-  ];
+  const [selectedTagId, setSelectedTagId] = useState(""); // To store user ID
+  const users = useGetAllUsers(); // Assuming this hook returns users with _id and username
+  const { authUser } = useSelector((store) => store.user);
+  console.log("Auth user", authUser);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -32,19 +31,34 @@ const CreateMemory = () => {
   };
 
   const handleAddTag = () => {
-    if (selectedTag && !memory.tags.includes(selectedTag)) {
+    if (selectedTag && !memory.tags.includes(selectedTagId)) {
+      // Add user ID to tags
       setMemory({
         ...memory,
-        tags: [...memory.tags, selectedTag],
+        tags: [...memory.tags, selectedTagId],
       });
     }
-    setSelectedTag(""); // Reset the selected tag after adding
+    setSelectedTag(""); // Reset the selected username after adding
+    setSelectedTagId(""); // Reset the selected user ID after adding
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Memory created:", memory);
-    // Add logic to save memory (e.g., API call)
+    console.log(memory);
+
+    try {
+      const response = await axios.post(
+        `http://localhost:3000/api/MemoLink/memory/createMemory`,
+        memory,
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+      console.log(response.data);
+    } catch (error) {
+      console.log("Error Creating Memory in client : ", error);
+    }
   };
 
   return (
@@ -93,7 +107,11 @@ const CreateMemory = () => {
           <div className="flex items-center">
             <Select
               value={selectedTag}
-              onValueChange={setSelectedTag}
+              onValueChange={(value) => {
+                const user = users.find((user) => user.username === value);
+                setSelectedTag(value); // Store the username
+                setSelectedTagId(user ? user._id : ""); // Store the user ID
+              }}
               className="w-full mt-2 bg-gray-800 text-white focus:outline-none focus:ring focus:ring-blue-500"
             >
               <SelectTrigger>
@@ -101,7 +119,7 @@ const CreateMemory = () => {
               </SelectTrigger>
               <SelectContent>
                 {users.map((user) => (
-                  <SelectItem key={user.id} value={user.username}>
+                  <SelectItem key={user._id} value={user.username}>
                     {user.username}
                   </SelectItem>
                 ))}
@@ -118,14 +136,17 @@ const CreateMemory = () => {
           <div className="mt-2">
             {memory.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {memory.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm"
-                  >
-                    {tag}
-                  </span>
-                ))}
+                {memory.tags.map((tagId, index) => {
+                  const user = users.find((user) => user._id === tagId);
+                  return (
+                    <span
+                      key={index}
+                      className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm"
+                    >
+                      {user?.username}
+                    </span>
+                  );
+                })}
               </div>
             )}
           </div>

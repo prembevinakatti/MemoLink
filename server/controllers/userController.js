@@ -120,24 +120,50 @@ module.exports.updateAccount = async (req, res) => {
   }
 };
 
-
 module.exports.checkUsername = async (req, res) => {
   try {
     const { username } = req.body;
 
     if (!username) {
-      return res.status(400).json({ success: false, message: "Username is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Username is required" });
     }
 
     const existingUser = await userModel.findOne({ username });
 
     if (existingUser) {
-      return res.status(409).json({ success: false, message: "Username is already taken" });
+      return res
+        .status(409)
+        .json({ success: false, message: "Username is already taken" });
     }
 
-    return res.status(200).json({ success: true, message: "Username is available" });
+    return res
+      .status(200)
+      .json({ success: true, message: "Username is available" });
   } catch (error) {
     console.error("Error checking username:", error.message);
     return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+module.exports.getAllUser = async (req, res) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized Access" });
+    }
+
+    const allUsers = await userModel.find({ _id: { $ne: user } });
+
+    if (!allUsers || allUsers.length === 0) {
+      return res.status(404).json({ message: "No users found" });
+    }
+
+    return res.status(200).json({ success: true, users: allUsers });
+  } catch (error) {
+    console.log("Error getting all users: ", error.message);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
