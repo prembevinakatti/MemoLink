@@ -12,18 +12,21 @@ import {
 import useGetAllUsers from "@/hooks/useGetAllUsers";
 import axios from "axios";
 import { useSelector } from "react-redux";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const CreateMemory = () => {
   const [memory, setMemory] = useState({
     location: "",
     content: "",
+    user: "",
     tags: [], // Tags will store user IDs
   });
+  const navigate = useNavigate();
   const [selectedTag, setSelectedTag] = useState(""); // For selected user tag
   const [selectedTagId, setSelectedTagId] = useState(""); // To store user ID
   const users = useGetAllUsers(); // Assuming this hook returns users with _id and username
   const { authUser } = useSelector((store) => store.user);
-  console.log("Auth user", authUser);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -35,17 +38,16 @@ const CreateMemory = () => {
       // Add user ID to tags
       setMemory({
         ...memory,
+        user: authUser._id,
         tags: [...memory.tags, selectedTagId],
       });
     }
-    setSelectedTag(""); // Reset the selected username after adding
-    setSelectedTagId(""); // Reset the selected user ID after adding
+    setSelectedTag("");
+    setSelectedTagId("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(memory);
-
     try {
       const response = await axios.post(
         `http://localhost:3000/api/MemoLink/memory/createMemory`,
@@ -55,7 +57,10 @@ const CreateMemory = () => {
           withCredentials: true,
         }
       );
-      console.log(response.data);
+      if (response.data.success) {
+        toast.success(response.data.message);
+        navigate("/home");
+      }
     } catch (error) {
       console.log("Error Creating Memory in client : ", error);
     }

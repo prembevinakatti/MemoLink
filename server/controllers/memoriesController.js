@@ -1,18 +1,18 @@
 const memoriesModel = require("../models/memoriesModel");
 const memoryExchangeModel = require("../models/memoryExchangeModel");
+const userModel = require("../models/userModel");
 const { findById } = require("../models/userModel");
 
 module.exports.createMemory = async (req, res) => {
   try {
-    const { user, profilePhoto, location, content, tags } = req.body;
+    const { user, location, content, tags } = req.body;
 
-    if (!user || !profilePhoto || !location || !content || !tags) {
+    if (!user || !location || !content || !tags) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
     const memory = await memoriesModel.create({
       user: user,
-      profilePhoto: profilePhoto,
       location: location,
       tags: tags,
       content: content,
@@ -174,8 +174,6 @@ module.exports.getMemories = async (req, res) => {
     const user = req.user;
     const senderId = req.params.senderId;
 
-    console.log("user", user, "senderId", senderId);
-
     if (!user) {
       return res.status(401).json({ message: "Unauthorized Access" });
     }
@@ -219,7 +217,10 @@ module.exports.getAllMemories = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized Access" });
     }
 
-    const memories = await memoriesModel.find().sort({ createdAt: -1 });
+    const memories = await memoriesModel
+      .find()
+      .sort({ createdAt: -1 })
+      .populate("user");
 
     if (!memories) {
       return res.status(404).json({ message: "No memories found" });
@@ -237,3 +238,40 @@ module.exports.getAllMemories = async (req, res) => {
     );
   }
 };
+
+module.exports.getUsersByTags = async (req, res) => {
+  try {
+    const user = req.user; // Assuming user is authenticated
+    const { tags } = req.body; // Tags are passed as an array of user IDs
+
+    // Check if the user is authenticated
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized Access" });
+    }
+
+    // Check if the tags array is provided
+    if (!tags || !Array.isArray(tags)) {
+      return res.status(400).json({ message: "Tags array is required" });
+    }
+
+    // Find users by their IDs
+    const users = await userModel.find({ _id: { $in: tags } });
+
+    // Check if users are found
+    if (users.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No users found with these tags" });
+    }
+
+    return res.status(200).json({
+      message: "Users retrieved successfully",
+      success: true,
+      users,
+    });
+  } catch (error) {
+    console.error("Error getting users by tags: ", error.message);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+

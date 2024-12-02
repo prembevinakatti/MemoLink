@@ -57,7 +57,7 @@ module.exports.loginAccount = async (req, res) => {
     }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "3h",
     });
 
     res.cookie("token", token, { expires: new Date(Date.now() + 3600000) });

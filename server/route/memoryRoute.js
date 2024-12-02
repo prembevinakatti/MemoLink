@@ -8,6 +8,7 @@ const {
   sendMemory,
   getMemories,
   getAllMemories,
+  getUsersByTags,
 } = require("../controllers/memoriesController");
 
 const router = express.Router();
@@ -19,5 +20,6 @@ router.route("/getMemoriesByUser").get(isAuthenticated, getMemoriesByUser);
 router.route("/sendMemory").post(isAuthenticated, sendMemory);
 router.route("/getMemories/:senderId").get(isAuthenticated, getMemories);
 router.route("/getAllMemories").get(isAuthenticated, getAllMemories);
+router.route("/getUserByTag").post(isAuthenticated, getUsersByTags);
 
 module.exports = router;

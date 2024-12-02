@@ -6,10 +6,6 @@ const memoriesSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    profilePhoto: {
-      type: String,
-      default: "default_profile_photo.jpg",
-    },
     content: {
       type: String,
       required: true,
