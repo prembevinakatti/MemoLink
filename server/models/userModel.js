@@ -17,21 +17,23 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "default-profile-photo.png",
     },
+    following: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    followers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     password: {
       type: String,
       required: true,
       minlength: 6,
       maxlength: 100,
-      //   validate: {
-      //     validator: function (v) {
-      //       // Check if password contains at least one uppercase letter, one lowercase letter, one number, and one special character
-      //       return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(
-      //         v
-      //       );
-      //     },
-      //     message:
-      //       "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.",
-      //   },
     },
   },
   { timestamps: true }

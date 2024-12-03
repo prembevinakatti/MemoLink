@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { FaHeart, FaRegCommentDots, FaBookmark } from "react-icons/fa";
 import { BsFillSendFill } from "react-icons/bs";
 import { IoLocationSharp } from "react-icons/io5";
@@ -17,6 +17,9 @@ const MemoryCard = ({ memory }) => {
   // State for likes
   const [liked, setLiked] = useState(likes.includes(user._id));
   const [likeCount, setLikeCount] = useState(likes.length);
+
+  // State for follow status
+  const [isFollowing, setIsFollowing] = useState(false);
 
   const { taggedUsers, loading, error } = useGetTaggedUsers(tags);
 
@@ -41,22 +44,52 @@ const MemoryCard = ({ memory }) => {
     }
   };
 
+  // Toggle follow state
+  const handleFollowToggle = async () => {
+    try {
+      const response = await axios.post(
+        `http://localhost:3000/api/MemoLink/user/follow/${user._id}`,
+        {},
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+
+      if (response.data.success) {
+        setIsFollowing(!isFollowing); // Toggle follow state
+      }
+    } catch (error) {
+      console.error("Error toggling follow:", error);
+    }
+  };
+
   return (
     <div className="bg-black w-[32vw] text-white rounded-lg shadow-lg border border-gray-800 p-6 max-w-xl">
       {/* User Info */}
-      <div className="flex items-center gap-3 mb-4">
-        <img
-          src={user.profilePhoto}
-          alt={`${user.username}'s profile`}
-          className="w-10 h-10 rounded-full border border-gray-600"
-        />
-        <div>
-          <h3 className="font-semibold capitalize">{user.username}</h3>
-          <p className="text-sm flex capitalize items-center justify-center gap-1 text-gray-400">
-            <IoLocationSharp />
-            {location}
-          </p>
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-3">
+          <img
+            src={user.profilePhoto}
+            alt={`${user.username}'s profile`}
+            className="w-10 h-10 rounded-full border border-gray-600"
+          />
+          <div>
+            <h3 className="font-semibold capitalize">{user.username}</h3>
+            <p className="text-sm flex capitalize items-center justify-center gap-1 text-gray-400">
+              <IoLocationSharp />
+              {location}
+            </p>
+          </div>
         </div>
+        <button
+          onClick={handleFollowToggle}
+          className={`px-4 py-1 text-sm font-medium rounded-md ${
+            isFollowing ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"
+          } transition`}
+        >
+          {isFollowing ? "Unfollow" : "Follow"}
+        </button>
       </div>
 
       {/* Memory Content */}

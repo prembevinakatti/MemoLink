@@ -6,6 +6,7 @@ const {
   updateAccount,
   checkUsername,
   getAllUser,
+  toggleFollow,
 } = require("../controllers/userController");
 const isAuthenticated = require("../middleware/isAuthenticated");
 
@@ -17,5 +18,6 @@ router.route("/loginAccount").post(loginAccount);
 router.route("/logoutAccount").get(isAuthenticated, logout);
 router.route("/updateAccount").patch(isAuthenticated, updateAccount);
 router.route("/getAllUsers").get(isAuthenticated, getAllUser);
+router.route("/toggleFollow/:id").post(isAuthenticated, toggleFollow);
 
 module.exports = router;

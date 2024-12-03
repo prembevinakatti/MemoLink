@@ -10,7 +10,7 @@ const useGetTaggedUsers = (tags) => {
     if (tags && tags.length > 0) {
       const fetchTaggedUsers = async () => {
         setLoading(true);
-        setError(null); // Reset previous errors
+        setError(null); 
         try {
           const response = await axios.post(
             `http://localhost:3000/api/MemoLink/memory/getUserByTag`,

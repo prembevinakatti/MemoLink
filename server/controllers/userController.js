@@ -167,3 +167,55 @@ module.exports.getAllUser = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+module.exports.toggleFollow = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const currentUser = req.user; // Authenticated user
+
+    if (!currentUser) {
+      return res.status(401).json({ message: "Unauthorized Access" });
+    }
+
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const loginedUser = await userModel.findById(currentUser);
+
+    if (!loginedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isFollowing = loginedUser.following?.includes(userId.toString());
+
+    if (isFollowing) {
+      // Unfollow
+      await userModel.findByIdAndUpdate(loginedUser._id, {
+        $pull: { following: userId },
+      });
+      await userModel.findByIdAndUpdate(userId, {
+        $pull: { followers: loginedUser._id },
+      });
+    } else {
+      // Follow
+      await userModel.findByIdAndUpdate(loginedUser._id, {
+        $push: { following: userId },
+      });
+      await userModel.findByIdAndUpdate(userId, {
+        $push: { followers: loginedUser._id },
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: isFollowing
+        ? "Unfollowed successfully"
+        : "Followed successfully",
+    });
+  } catch (error) {
+    console.error("Error toggling follow:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
