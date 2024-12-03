@@ -35,6 +35,12 @@ const userSchema = new mongoose.Schema(
       minlength: 6,
       maxlength: 100,
     },
+    savedMemory: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Memory",
+      },
+    ],
   },
   { timestamps: true }
 );

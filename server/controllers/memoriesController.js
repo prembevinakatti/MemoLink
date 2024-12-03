@@ -275,3 +275,111 @@ module.exports.getUsersByTags = async (req, res) => {
   }
 };
 
+module.exports.savePost = async (req, res) => {
+  try {
+    const user = req.user;
+    const memoryId = req.params.memoryId;
+
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized Access" });
+    }
+
+    if (!memoryId) {
+      return res.status(400).json({ message: "Post ID is required" });
+    }
+
+    const memory = await memoriesModel.findById(memoryId);
+
+    if (!memory) {
+      return res.status(404).json({ message: "Memory not found" });
+    }
+
+    const currentUser = await userModel.findById(user);
+
+    if (!currentUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (currentUser?.savedMemory?.includes(memory._id)) {
+      const updatedUser = await userModel.findByIdAndUpdate(
+        user,
+        { $pull: { savedMemory: memory._id } },
+        { new: true }
+      );
+
+      return res.status(200).json({
+        message: "Memory Unsaved  successfully",
+        success: true,
+        memory: updatedUser,
+      });
+    } else {
+      const updateduser = await userModel.findByIdAndUpdate(
+        user,
+        { $push: { savedMemory: memory._id } },
+        { new: true }
+      );
+
+      return res.status(200).json({
+        message: "Memory Saved successfully ",
+        success: true,
+        memory: updateduser,
+      });
+    }
+  } catch (error) {
+    console.log("Error Saving Post : ", error.message);
+  }
+};
+
+module.exports.isSaved = async (req, res) => {
+  try {
+    const user = req.user;
+    const memoryId = req.params.memoryId;
+
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized Access" });
+    }
+
+    const currentUser = await userModel.findById(user);
+
+    if (!currentUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isSaved = currentUser.savedMemory?.includes(memoryId);
+
+    res.status(200).json({ success: true, isSaved });
+  } catch (error) {
+    console.error("Error checking saved state:", error.message);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+module.exports.getSavedMemory = async (req, res) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized Access" });
+    }
+
+    const currentUser = await userModel.findById(user);
+
+    if (!currentUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const memories = await currentUser.populate("savedMemory");
+
+    if (!memories) {
+      return res.status(404).json({ message: "No saved memories found" });
+    }
+
+    return res.status(200).json({
+      message: "Saved memories retrieved successfully",
+      success: true,
+      memories,
+    });
+  } catch (error) {
+    console.log("Error Getting Saved Memory : ", error.message);
+  }
+};

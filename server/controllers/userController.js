@@ -246,3 +246,27 @@ module.exports.isFollowing = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+module.exports.getFollowers = async (req, res) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized Access" });
+    }
+
+    const followers = await userModel.findById(user).populate("followers");
+
+    if (!followers) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({
+      message: "Followers retrieved successfully",
+      success: true,
+      followers,
+    });
+  } catch (error) {
+    console.log("Error Gettting Followers", error.message);
+  }
+};

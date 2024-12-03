@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"; // ShadCN dropdown components
 import useGetTaggedUsers from "@/hooks/useGetTaggedUsers";
+import useGetFollowers from "@/hooks/useGetFollowers";
 
 const MemoryCard = ({ memory }) => {
   const { _id, user, location, content, tags, likes } = memory;
@@ -20,6 +21,14 @@ const MemoryCard = ({ memory }) => {
 
   // State for follow status
   const [isFollowing, setIsFollowing] = useState(false);
+
+  // State for saved memory
+  const [saved, setSaved] = useState(false);
+
+  // State for fetching and showing followers
+  const [fetchingFollowers, setFetchingFollowers] = useState(false);
+  const [followers, setFollowers] = useState([]);
+  const [followersError, setFollowersError] = useState(null);
 
   const { taggedUsers, loading, error } = useGetTaggedUsers(tags);
 
@@ -36,8 +45,6 @@ const MemoryCard = ({ memory }) => {
         );
 
         if (response.data.success) {
-          console.log(response.data);
-
           setIsFollowing(response.data.isFollowing);
         } else {
           console.error("Failed to fetch follow state:", response.data.message);
@@ -49,6 +56,29 @@ const MemoryCard = ({ memory }) => {
 
     fetchFollowState(); // Fetch on component mount
   }, [user._id]);
+
+  // Fetch saved state for memory
+  useEffect(() => {
+    const fetchSavedState = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:3000/api/MemoLink/memory/isSaved/${_id}`,
+          {
+            headers: { "Content-Type": "application/json" },
+            withCredentials: true,
+          }
+        );
+
+        if (response.data.success) {
+          setSaved(response.data.isSaved);
+        }
+      } catch (error) {
+        console.error("Error fetching saved state:", error);
+      }
+    };
+
+    fetchSavedState();
+  }, [_id]);
 
   // Toggle like state
   const handleLikeToggle = async (memoryId) => {
@@ -88,6 +118,53 @@ const MemoryCard = ({ memory }) => {
       }
     } catch (error) {
       console.error("Error toggling follow:", error);
+    }
+  };
+
+  // Toggle save state
+  const handleSaveToggle = async () => {
+    try {
+      const response = await axios.post(
+        `http://localhost:3000/api/MemoLink/memory/savePost/${_id}`,
+        {},
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+
+      if (response.data.success) {
+        setSaved(!saved); // Toggle save state
+      }
+    } catch (error) {
+      console.error("Error toggling save:", error);
+    }
+  };
+
+  // Fetch followers when the dropdown is triggered
+  const handleFetchFollowers = async () => {
+    setFetchingFollowers(true);
+    setFollowersError(null);
+
+    try {
+      const response = await axios.get(
+        `http://localhost:3000/api/MemoLink/auth/getFollowers/${user._id}`,
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+
+      if (response.data.success) {
+        setFollowers(response.data.followers || []);
+      } else {
+        setFollowersError("Failed to fetch followers");
+      }
+    } catch (error) {
+      setFollowersError("Error fetching followers");
+      console.error("Error fetching followers:", error.message);
+    } finally {
+      setFetchingFollowers(false);
     }
   };
 
@@ -177,18 +254,42 @@ const MemoryCard = ({ memory }) => {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Share Button */}
-        <button
-          onClick={() => alert("Share functionality coming soon!")}
-          className="flex items-center text-gray-400 hover:text-green-400 transition"
-        >
-          <BsFillSendFill />
-        </button>
+        {/* Share Button to Show Followers Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            onClick={handleFetchFollowers}
+            className="flex items-center text-gray-400 hover:text-green-400 transition"
+          >
+            <BsFillSendFill />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="bg-black text-white border border-gray-700 w-[240px] rounded-md p-2">
+            <h3 className="text-sm text-gray-400 font-semibold mb-2">
+              Followers
+            </h3>
+            {fetchingFollowers ? (
+              <p className="text-xs text-gray-500 text-center">Loading...</p>
+            ) : followersError ? (
+              <p className="text-xs text-gray-500 text-center">
+                {followersError}
+              </p>
+            ) : followers.length > 0 ? (
+              followers.map((follower) => (
+                <DropdownMenuItem key={follower._id}>
+                  {follower.username}
+                </DropdownMenuItem>
+              ))
+            ) : (
+              <p className="text-xs text-gray-500 text-center">No followers</p>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Save Button */}
         <button
-          onClick={() => alert("Saved!")}
-          className="flex items-center text-gray-400 hover:text-yellow-400 transition"
+          onClick={handleSaveToggle}
+          className={`flex items-center ${
+            saved ? "text-yellow-400" : "text-gray-400"
+          } hover:text-yellow-400 transition`}
         >
           <FaBookmark className="mr-2" />
         </button>
