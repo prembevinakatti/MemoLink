@@ -219,3 +219,30 @@ module.exports.toggleFollow = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+module.exports.isFollowing = async (req, res) => {
+  try {
+    const userId = req.params.id; // ID of the user being checked
+    const currentUser = req.user; // Authenticated user
+
+    if (!currentUser) {
+      return res.status(401).json({ message: "Unauthorized Access" });
+    }
+
+    const logedinUser = await userModel.findById(currentUser);
+
+    if (!logedinUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isFollowing = logedinUser.following?.includes(userId);
+
+    res.status(200).json({
+      success: true,
+      isFollowing,
+    });
+  } catch (error) {
+    console.error("Error checking follow state:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaHeart, FaRegCommentDots, FaBookmark } from "react-icons/fa";
 import { BsFillSendFill } from "react-icons/bs";
 import { IoLocationSharp } from "react-icons/io5";
@@ -22,6 +22,33 @@ const MemoryCard = ({ memory }) => {
   const [isFollowing, setIsFollowing] = useState(false);
 
   const { taggedUsers, loading, error } = useGetTaggedUsers(tags);
+
+  // Fetch follow state on component mount
+  useEffect(() => {
+    const fetchFollowState = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:3000/api/MemoLink/auth/isFollowing/${user._id}`,
+          {
+            headers: { "Content-Type": "application/json" },
+            withCredentials: true,
+          }
+        );
+
+        if (response.data.success) {
+          console.log(response.data);
+
+          setIsFollowing(response.data.isFollowing);
+        } else {
+          console.error("Failed to fetch follow state:", response.data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching follow state:", error);
+      }
+    };
+
+    fetchFollowState(); // Fetch on component mount
+  }, [user._id]);
 
   // Toggle like state
   const handleLikeToggle = async (memoryId) => {
@@ -48,7 +75,7 @@ const MemoryCard = ({ memory }) => {
   const handleFollowToggle = async () => {
     try {
       const response = await axios.post(
-        `http://localhost:3000/api/MemoLink/user/follow/${user._id}`,
+        `http://localhost:3000/api/MemoLink/auth/toggleFollow/${user._id}`,
         {},
         {
           headers: { "Content-Type": "application/json" },
@@ -85,7 +112,9 @@ const MemoryCard = ({ memory }) => {
         <button
           onClick={handleFollowToggle}
           className={`px-4 py-1 text-sm font-medium rounded-md ${
-            isFollowing ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"
+            isFollowing
+              ? "bg-red-600 hover:bg-red-700"
+              : "bg-blue-600 hover:bg-blue-700"
           } transition`}
         >
           {isFollowing ? "Unfollow" : "Follow"}
