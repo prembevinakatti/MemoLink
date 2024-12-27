@@ -237,7 +237,7 @@ export default function SignUpForm() {
           <div className="w-full text-center font-semibold">
             <span>
               Already have an account ?{" "}
-              <Link to="/" className="text-blue-500 underline">
+              <Link to="/login" className="text-blue-500 underline">
                 Login
               </Link>
             </span>

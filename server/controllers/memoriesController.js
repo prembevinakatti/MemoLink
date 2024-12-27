@@ -1,11 +1,15 @@
 const memoriesModel = require("../models/memoriesModel");
 const memoryExchangeModel = require("../models/memoryExchangeModel");
 const userModel = require("../models/userModel");
-const { findById } = require("../models/userModel");
 
 module.exports.createMemory = async (req, res) => {
   try {
     const { user, location, content, tags } = req.body;
+    const logedinUser = req.user;
+
+    if (!logedinUser) {
+      return res.status(401).json({ message: "Unauthorized Access" });
+    }
 
     if (!user || !location || !content || !tags) {
       return res.status(400).json({ message: "All fields are required" });
@@ -107,7 +111,7 @@ module.exports.getMemoriesByUser = async (req, res) => {
 
     const memories = await memoriesModel
       .find({ user: user })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 }).populate("user")
 
     if (!memories) {
       return res
