@@ -5,6 +5,8 @@ import MemoryCard from "./MemoryCard";
 
 const Dashboard = () => {
   const memories = useGetMemoryByUser(); // Fetch user-created memories
+  console.log(memories);
+  
   const { authUser } = useSelector((store) => store.user);
 
   return (
@@ -65,10 +67,10 @@ const Dashboard = () => {
             memories.map((memory) => (
               <MemoryCard
                 key={memory._id}
-                username={memory.user || "Unknown User"}
+                username={memory.user.username || "Unknown User"}
                 content={memory.content}
-                likes={memory.likes}
-                tags={memory.tags}
+                likes={memory.likes.length}
+                tags={memory.tags.length}
                 location={memory.location}
               />
             ))

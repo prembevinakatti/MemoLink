@@ -3,7 +3,7 @@ import { FaThumbsUp, FaMapMarkerAlt, FaTag } from "react-icons/fa"; // Importing
 
 const MemoryCard = ({ username, content, likes, tags, location }) => {
   return (
-    <div className="bg-[#161b22] p-4 rounded-lg shadow-md border border-blue-500 w-72">
+    <div className="bg-[#161b22] hover:scale-105 transition-all p-4 rounded-lg shadow-md border border-blue-500 w-72">
       <h4 className="text-lg font-bold text-white mb-2">{username}</h4>
       <p className="text-white mb-4">{content}</p>
 
@@ -23,7 +23,7 @@ const MemoryCard = ({ username, content, likes, tags, location }) => {
         {/* Tags */}
         <div className="flex items-center gap-2">
           <FaTag className="text-blue-400" />
-          <p>{tags && tags.length > 0 ? tags.join(", ") : "No Tags"}</p>
+          <p>{tags ? tags : "No Tags"}</p>
         </div>
       </div>
     </div>

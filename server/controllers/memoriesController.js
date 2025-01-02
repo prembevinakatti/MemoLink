@@ -111,7 +111,8 @@ module.exports.getMemoriesByUser = async (req, res) => {
 
     const memories = await memoriesModel
       .find({ user: user })
-      .sort({ createdAt: -1 }).populate("user")
+      .sort({ createdAt: -1 })
+      .populate("user");
 
     if (!memories) {
       return res
